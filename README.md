@@ -2,6 +2,10 @@
 
 Segundo Parcial de sw1
 
+colocar argumentos a la hora de ejecutar el proyecto
+--no-sound-null-safety
+pra que haga una compilacion mixta de versiones
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

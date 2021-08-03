@@ -1,5 +1,4 @@
-import 'package:covid_bot/main.dart';
-import 'package:covid_bot/src/pages/chat.dart';
+import 'package:covid_bot/src/pages/home_page.dart';
 import 'package:covid_bot/src/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 
@@ -25,15 +24,15 @@ class MenuWidget extends StatelessWidget {
 
           ListTile(
             leading: Icon( Icons.pages, color: Colors.blue ),
-            title: Text('Chat Normal'),
-            onTap: ()=> Navigator.pushReplacementNamed(context, MyHomePage.routeName ) ,
+            title: Text('Chat'),
+            onTap: ()=> Navigator.pushReplacementNamed(context, HomePage.routeName ) ,
           ),
 
-          ListTile(
+          /*ListTile(
             leading: Icon( Icons.people, color: Colors.blue ),
             title: Text('Chat Voz'),
             onTap: (){ },
-          ),
+          ),*/
 
           ListTile(
               leading: Icon( Icons.settings, color: Colors.blue ),

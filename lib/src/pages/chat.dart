@@ -1,6 +1,7 @@
 // @dart=2.9
 
 import 'dart:async';
+import 'package:covid_bot/src/pages/chat_message.dart';
 import 'package:covid_bot/src/settings_user/preferencias_usuario.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,8 +16,6 @@ import 'package:dialogflow_grpc/generated/google/cloud/dialogflow/v2beta1/sessio
 import 'package:dialogflow_grpc/dialogflow_grpc.dart';
 
 class Chat extends StatefulWidget {
-
-  Chat({Key key}) : super(key: key);
 
   @override
   _ChatState createState() => _ChatState();
@@ -67,11 +66,8 @@ class _ChatState extends State<Chat> {
 
     await Future.wait([_recorder.initialize()]);
 
-    // TODO Get a Service account
-    // Get a Service account
     final serviceAccount = ServiceAccount.fromString(
         '${(await rootBundle.loadString('assets/credentials.json'))}');
-    // Create a DialogflowGrpc Instance
     dialogflow = DialogflowGrpcV2Beta1.viaServiceAccount(serviceAccount);
   }
 
@@ -82,7 +78,7 @@ class _ChatState extends State<Chat> {
   }
 
   //Interaccion del mensaje con el bot
-  void handleSubmitted(text) async {
+  void manejadorEnvio(text) async {
     print(text);
     _textController.clear();
     String nombre = (prefs.nombreUsuario.length>0)?prefs.nombreUsuario:'You';
@@ -99,23 +95,23 @@ class _ChatState extends State<Chat> {
       _messages.insert(0, message);
     });
 
-    String fulfillmentText = "";
+    String respDialogFLow = "";
     try {
-      DetectIntentResponse data = await dialogflow.detectIntent(text, 'es-419');
-      fulfillmentText = data.queryResult.fulfillmentText;
-      print(fulfillmentText);
+      DetectIntentResponse data = await dialogflow.detectIntent(text, 'es-ES');
+      respDialogFLow = data.queryResult.fulfillmentText;
+      print(respDialogFLow);
     } catch (e) {
       print(e);
     }
 
-    if (fulfillmentText.isNotEmpty) {
+    if (respDialogFLow.isNotEmpty) {
       ChatMessage botMessage = ChatMessage(
-        text: fulfillmentText,
+        text: respDialogFLow,
         name: "Bot :D",
         type: false,
       );
       tts.setLanguage('es-ES');
-      tts.speak(fulfillmentText);
+      tts.speak(respDialogFLow);
       setState(() {
         _messages.insert(0, botMessage);
       });
@@ -140,12 +136,9 @@ class _ChatState extends State<Chat> {
     ], boost: 20.0);
 
     // TODO Create and audio InputConfig
-    // See: https://cloud.google.com/dialogflow/es/docs/reference/rpc/google.cloud.dialogflow.v2#google.cloud.dialogflow.v2.InputAudioConfig
     var config = InputConfigV2beta1(
         encoding: 'AUDIO_ENCODING_LINEAR_16',
-        languageCode: 'es-419',
-        // speechModelVariant: 'USE_ENHANCED',
-        // model: 'command_and_search',
+        languageCode: 'es-ES',
         sampleRateHertz: 16000,
         singleUtterance: false,
         speechContexts: [biasList]);
@@ -159,7 +152,7 @@ class _ChatState extends State<Chat> {
     responseStream.listen((data) {
       setState(() {
         String transcript = data.recognitionResult.transcript;
-        String queryText = data.queryResult.queryText;
+        /*String queryText = data.queryResult.queryText;
         String fulfillmentText = data.queryResult.fulfillmentText;
 
         String nombre = (prefs.nombreUsuario.length>0)?prefs.nombreUsuario:'You';
@@ -182,7 +175,7 @@ class _ChatState extends State<Chat> {
           _messages.insert(0, message);
           _textController.clear();
           _messages.insert(0, botMessage);
-        }
+        }*/
         if (transcript.isNotEmpty) {
           _textController.text = transcript;
         }
@@ -194,7 +187,7 @@ class _ChatState extends State<Chat> {
     });
   }
 
-  // The chat interface
+  // Chat
   //
   //------------------------------------------------------------------------------------
   @override
@@ -215,7 +208,7 @@ class _ChatState extends State<Chat> {
                   Flexible(
                     child: TextField(
                       controller: _textController,
-                      onSubmitted: handleSubmitted,
+                      onSubmitted: manejadorEnvio,
                       decoration:
                       InputDecoration.collapsed(hintText: "Ingrese un mensaje"),
                     ),
@@ -224,7 +217,7 @@ class _ChatState extends State<Chat> {
                     margin: EdgeInsets.symmetric(horizontal: 4.0),
                     child: IconButton(
                       icon: Icon(Icons.send, color: prefs.genero==1?Colors.blue:Colors.amber,),
-                      onPressed: () => handleSubmitted(_textController.text),
+                      onPressed: () => manejadorEnvio(_textController.text),
                     ),
                   ),
                   IconButton(
@@ -236,75 +229,6 @@ class _ChatState extends State<Chat> {
               ),
             ),
     ]
-    );
-  }
-}
-
-//------------------------------------------------------------------------------------
-// The chat message balloon
-//
-//------------------------------------------------------------------------------------
-class ChatMessage extends StatelessWidget {
-  ChatMessage({this.text, this.name, this.type});
-
-  final String text;
-  final String name;
-  final bool type;
-
-  List<Widget> otherMessage(context) {
-    return <Widget>[
-      new Container(
-        margin: const EdgeInsets.only(right: 16.0),
-        child: CircleAvatar(child: new Text('B')),
-      ),
-      new Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(this.name, style: TextStyle(fontWeight: FontWeight.bold)),
-            Container(
-              margin: const EdgeInsets.only(top: 5.0),
-              child: Text(text),
-            ),
-          ],
-        ),
-      ),
-    ];
-  }
-
-  List<Widget> myMessage(context) {
-    return <Widget>[
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Text(name, style: Theme.of(context).textTheme.subtitle1),
-            Container(
-              margin: const EdgeInsets.only(top: 5.0),
-              child: Text(text),
-            ),
-          ],
-        ),
-      ),
-      Container(
-        margin: const EdgeInsets.only(left: 16.0),
-        child: CircleAvatar(
-            child: Text(
-              this.name[0]??'Y',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            )),
-      ),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: this.type ? myMessage(context) : otherMessage(context),
-      ),
     );
   }
 }
